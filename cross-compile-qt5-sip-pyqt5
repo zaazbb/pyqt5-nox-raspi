@@ -1,0 +1,222 @@
+target-device: 2017-07-05-raspbian-jessie
+uname: Linux raspberrypi 4.9.35+ #1014 Fri Jun 30 14:34:49 BST 2017 armv6l GNU/Linux
+python3: Python 3.4.2 (default, Oct 19 2014, 13:31:11) [GCC 4.9.1] on linux
+gcc: gcc version 4.9.2 (Raspbian 4.9.2-10) 
+
+host-device:ubuntu-14.04.5-desktop-i386
+uname: Linux ubuntu 4.4.0-97-generic #120~14.04.1-Ubuntu SMP Wed Sep 20 15:53:05 UTC 2017 i686 i686 i686 GNU/Linux
+python3: Python 3.4.3 (default, Nov 17 2016, 01:11:57) [GCC 4.8.4] on linux
+gcc: gcc version 4.8.4 (Ubuntu 4.8.4-2ubuntu1~14.04.3) 
+
+
+
+[rpi]
+
+/etc/network/interface
+
+allow-hotplug wlan0
+#iface wlan0 inet manual
+#    wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
+iface wlan0 inet static
+  wpa-ssid "ssid"
+  wpa-psk "password"
+  address 172.16.200.1 
+  netmask 255.255.0.0
+  gateway 172.16.1.1
+
+
+/etc/apt/source.list
+
+deb https://mirrors.ustc.edu.cn/raspbian/raspbian/ jessie main contrib non-free rpi
+deb-src https://mirrors.ustc.edu.cn/raspbian/raspbian/ jessie main contrib non-free rpi
+
+/boot/
+touch ssh
+
+
+sudo apt-get update
+sudo rpi-update
+sync
+sudo reboot
+
+sudo apt-get install vim lrzsz git mercurial
+
+
+# build qt5, 
+# ref from https://wiki.qt.io/RaspberryPi2EGLFS
+
+[rpi]
+
+# Update your system and install required libraries
+sudo apt-get build-dep qt4-x11
+sudo apt-get build-dep libqt5gui5
+sudo apt-get install libudev-dev libinput-dev libts-dev libxcb-xinerama0-dev libxcb-xinerama0
+
+sudo mkdir /usr/local/qt5pi
+sudo chown pi:pi /usr/local/qt5pi
+
+sudo mkdir /usr/local/sippi
+sudo chown pi:pi /usr/local/sippi
+
+sudo mkdir /usr/local/pyqt5pi
+sudo chown pi:pi /usr/local/pyqt5pi
+
+printf "/usr/local/sippi/lib\n/usr/local/pyqt5pi/lib\n/home/pi/Documents/pylib" | sudo tee /usr/local/lib/python3.4/dist-packages/clientmodule.pth
+
+[host]
+
+cd ~/Download
+
+#sip4.18 used in PyQt5-5.6-gpl-Py3.5-Qt5.6.0-x64-2
+wget https://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.6/PyQt5_gpl-5.6.tar.gz
+wget https://sourceforge.net/projects/pyqt/files/sip/sip-4.18.1/sip-4.18.1.tar.gz
+
+#http://download.qt.io/archive/qt/5.6/5.6.3/submodules/qtbase-opensource-src-5.6.3.tar.xz
+#http://download.qt.io/archive/qt/5.6/5.6.3/single/qt-everywhere-opensource-src-5.6.3.tar.xz
+#http://download.qt.io/archive/qt/5.6/5.6.3/qt-opensource-linux-x64-android-5.6.3.run
+#http://download.qt.io/archive/qt/5.6/5.6.3/qt-opensource-windows-x86-mingw492-5.6.3.exe
+
+
+cd ~
+
+mkdir ~/raspi
+cd ~/raspi
+git clone https://github.com/raspberrypi/tools
+#hg clone https://bitbucket.org/dboddie/pyqt5-for-embedded-linux
+
+# Create a sysroot
+mkdir sysroot sysroot/usr sysroot/opt
+rsync -avz pi@172.16.200.1:/lib sysroot
+rsync -avz pi@172.16.200.1:/usr/include sysroot/usr
+rsync -avz pi@172.16.200.1:/usr/lib sysroot/usr
+rsync -avz pi@172.16.200.1:/opt/vc sysroot/opt
+
+# Adjust symlinks to be relative
+wget https://raw.githubusercontent.com/riscv/riscv-poky/master/scripts/sysroot-relativelinks.py
+chmod +x sysroot-relativelinks.py
+./sysroot-relativelinks.py sysroot
+
+# see http://code.qt.io/cgit/qt/
+git clone git://code.qt.io/qt/qtbase.git -b 5.6
+
+cd qtbase
+# target dir is qt5pi, and host tools like qmake in dir qt5.
+
+./configure -release -opengl es2 -device linux-rasp-pi-g++ -device-option CROSS_COMPILE=~/raspi/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian/bin/arm-linux-gnueabihf- -sysroot ~/raspi/sysroot -opensource -confirm-license -make libs -prefix /usr/local/qt5pi -extprefix ~/raspi/qt5pi -hostprefix ~/raspi/qt5 -v
+
+make
+make install
+
+# when met error as: fatal error: bcm_host.h: No such file or directory
+# add include dirs to includepath in qmake
+#see https://wiki.qt.io/Talk:RaspberryPi2EGLFS
+cp -f ../qmake.conf mkspecs/devices/linux-rasp-pi-g++/qmake.conf
+
+# If you failed, you can clear everything with:
+git clean -dfx
+
+
+# Deploy Qt to the device
+cd ..
+rsync -avz qt5pi pi@172.16.200.1:/usr/local
+
+
+# build a example
+cd qtbase/examples/opengl/qopenglwidget
+~/raspi/qt5/bin/qmake
+make
+scp qopenglwidget pi@172.16.200.1:/home/pi
+
+[rpi]
+
+# Update the device to let the linker find the Qt libs
+# If you're facing issues with running the example, 
+# try to use 00-qt5pi.conf instead of qt5pi.conf, to introduce proper order.
+#echo /usr/local/qt5pi/lib | sudo tee /etc/ld.so.conf.d/qt5pi.conf
+echo /usr/local/qt5pi/lib | sudo tee /etc/ld.so.conf.d/10-qt5pi.conf
+sudo ldconfig
+
+# Fix the EGL/GLES libraries
+sudo mv /usr/lib/arm-linux-gnueabihf/libEGL.so.1.0.0 /usr/lib/arm-linux-gnueabihf/libEGL.so.1.0.0_backup
+sudo mv /usr/lib/arm-linux-gnueabihf/libGLESv2.so.2.0.0 /usr/lib/arm-linux-gnueabihf/libGLESv2.so.2.0.0_backup
+sudo ln -s /opt/vc/lib/libEGL.so /usr/lib/arm-linux-gnueabihf/libEGL.so.1.0.0
+sudo ln -s /opt/vc/lib/libGLESv2.so /usr/lib/arm-linux-gnueabihf/libGLESv2.so.2.0.0
+
+# add missing symbolic links
+sudo ln -s /opt/vc/lib/libEGL.so /opt/vc/lib/libEGL.so.1
+sudo ln -s /opt/vc/lib/libGLESv2.so /opt/vc/lib/libGLESv2.so.2
+
+#  Run example to test.
+cd /home/pi
+./qopenglwidget
+
+[host]
+
+# Build other Qt modules
+git clone git://code.qt.io/qt/<qt-module>.git -b <qt-version>
+cd <qt-module>
+
+~/raspi/qt5/bin/qmake -r
+make
+make install
+
+rsync -avz qt5pi pi@172.16.200.1:/usr/local
+
+
+
+# build sip
+
+[host]
+
+cd ~/raspi
+cp ~/Downloads/sip-4.18.1.tar.gz .
+tar -xf sip-4.18.1.tar.gz
+
+# build for host
+
+sudo apt-get install python3.4-dev
+
+cd sip-4.18.1
+python3.4 configure.py
+make
+
+cp sipgen/sip ../
+cd ..
+
+
+# build for target
+
+rm -r sip-4.18.1
+tar -xf sip-4.18.1.tar.gz
+cd sip-4.18.1
+
+python3 configure.py --sysroot=../sysroot --use-qmake --configuration=../sip.cfg
+../qt5/bin/qmake
+make
+make install
+cd ..
+
+rsync -avz sippi pi@172.16.200.1:/usr/local
+
+
+
+# build  pyqt
+
+cd ~/raspi
+
+cp ~/Downloads/PyQt5_gpl-5.6.tar.gz .
+tar -xf PyQt5_gpl-5.6.tar.gz
+cd PyQt5_gpl-5.6
+
+CC='ccache gcc' CXX='ccache g++' python3 configure.py \
+    --sysroot=../sysroot --configuration=../pyqt5.cfg \
+    --sip=../sip --sip-incdir=../sysroot/usr/include/python3.4 \
+    --qmake=../qt5/bin/qmake \
+    --confirm-license --verbose --no-stubs
+make
+make install
+cd ..
+
+rsync -avz pyqt5pi pi@172.16.200.1:/usr/local
+
+

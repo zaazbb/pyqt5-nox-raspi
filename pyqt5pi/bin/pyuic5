@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /home/jf/raspi/pyqt5pi/uic -m PyQt5.uic.pyuic ${1+"$@"}

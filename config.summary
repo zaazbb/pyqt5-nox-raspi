@@ -1,0 +1,114 @@
+
+Build options:
+  Configuration .......... accessibility accessibility-atspi-bridge alsa audio-backend c++11 clock-gettime clock-monotonic compile_examples concurrent cross_compile cups dbus dbus-linked egl eglfs eglfs_brcm eglfs_gbm enable_new_dtags evdev eventfd fontconfig full-config gbm getaddrinfo getifaddrs glib gstreamer-0.10 harfbuzz iconv inotify ipv6ifname kms large-config largefile libinput libudev linuxfb medium-config minimal-config mremap mtdev opengl opengles2 openssl openvg pcre png posix_fallocate precompile_header pulseaudio qpa qpa reduce_exports release rpath shared small-config system-freetype system-jpeg system-png system-zlib threadsafe-cloexec tslib use_gold_linker xcb xcb-glx xcb-plugin xcb-render xcb-sm xcb-xlib xinput2 xkbcommon-evdev xlib xrender 
+  Build parts ............  libs
+  Mode ................... release
+  Using sanitizer(s)...... none
+  Using C++ standard ..... c++11
+  Using gold linker....... yes
+  Using new DTAGS ........ yes
+  Using PCH .............. yes
+  Using LTCG ............. no
+  Target compiler supports:
+    Neon ................. no
+
+Qt modules and options:
+  Qt D-Bus ............... yes (linked to dbus-1)
+  Qt Concurrent .......... yes
+  Qt GUI ................. yes
+  Qt Widgets ............. yes
+  Large File ............. yes
+  QML debugging .......... yes
+  Use system proxies ..... no
+
+Support enabled for:
+  Accessibility .......... yes
+  ALSA ................... yes
+  CUPS ................... yes
+  Evdev .................. yes
+  FontConfig ............. yes
+  FreeType ............... yes (system library)
+  Glib ................... yes
+  GStreamer .............. yes (0.10)
+  GTK theme .............. no
+  HarfBuzz ............... yes (bundled copy)
+  Iconv .................. yes
+  ICU .................... no
+  Image formats: 
+    GIF .................. yes (plugin, using bundled copy)
+    JPEG ................. yes (plugin, using system library)
+    PNG .................. yes (in QtGui, using system library)
+  libinput................ yes
+  Logging backends: 
+    journald ............... no
+    syslog   ............... no
+  mtdev .................. yes (system library)
+  Networking: 
+    getaddrinfo .......... yes
+    getifaddrs ........... yes
+    IPv6 ifname .......... yes
+    libproxy.............. no
+    OpenSSL .............. yes (loading libraries at run-time)
+  OpenGL / OpenVG: 
+    EGL .................. yes
+    OpenGL ............... yes (OpenGL ES 2.0+)
+    OpenVG ............... yes-auto
+  PCRE ................... yes (bundled copy)
+  pkg-config ............. yes 
+  PulseAudio ............. yes
+  QPA backends: 
+    DirectFB ............. no
+    EGLFS ................ yes
+      EGLFS i.MX6 ........ no
+      EGLFS i.MX6 Wayland. no
+      EGLFS EGLDevice .... no
+      EGLFS GBM .......... yes
+      EGLFS Mali ......... no
+      EGLFS Raspberry Pi . yes
+      EGLFS X11 .......... no
+    LinuxFB .............. yes
+    Mir client............ no
+    XCB .................. yes (system library)
+      EGL on X ........... no
+      GLX ................ yes
+      MIT-SHM ............ yes
+      Xcb-Xlib ........... yes
+      Xcursor ............ yes (loaded at runtime)
+      Xfixes ............. yes (loaded at runtime)
+      Xi ................. no
+      Xi2 ................ yes
+      Xinerama ........... yes (loaded at runtime)
+      Xrandr ............. yes (loaded at runtime)
+      Xrender ............ yes
+      XKB ................ yes
+      XShape ............. yes
+      XSync .............. yes
+      XVideo ............. yes
+  Session management ..... yes
+  SQL drivers: 
+    DB2 .................. no
+    InterBase ............ no
+    MySQL ................ no
+    OCI .................. no
+    ODBC ................. yes (plugin)
+    PostgreSQL ........... no
+    SQLite 2 ............. yes (plugin)
+    SQLite ............... yes (plugin, using bundled copy)
+    TDS .................. yes (plugin)
+  tslib .................. yes
+  udev ................... yes
+  xkbcommon-x11........... yes (system library)
+  xkbcommon-evdev......... yes
+  zlib ................... yes (system library)
+
+
+NOTE: Qt is using double for qreal on this system. This is binary incompatible against Qt 5.1.
+Configure with '-qreal float' to create a build that is binary compatible with 5.1.
+Info: creating cache file /home/jf/raspi/qtbase/.qmake.cache
+
+Qt is now configured for building. Just run 'make'.
+Once everything is built, you must run 'make install'.
+Qt will be installed into /usr/local/qt5pi
+
+Prior to reconfiguration, make sure you remove any leftovers from
+the previous build.
